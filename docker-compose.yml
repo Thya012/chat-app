@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: chat-app
-    restart: always
+    #restart: always
     ports:
       - "8080:8080"
     networks:

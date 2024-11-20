@@ -9,7 +9,7 @@ Axios.interceptors.request.use(
     // Refresh Token
     async (config) => {
         const authStore = useAuthStore()
-        // console.log(config.headers.Authorization)
+        console.log(config.headers.Authorization)
         if (config.headers.Authorization) {
             console.log("Trigger")
             console.log(authStore.refreshToken)
@@ -25,10 +25,10 @@ Axios.interceptors.request.use(
                         Authorization: `Bearer ${authStore.refreshToken}`
                     }
                 })
-                console.log(data)
+                //console.log(data)
                 authStore.accessToken = data.accessToken
                 authStore.refreshToken = data.refreshToken
-                console.log(config)
+                //console.log(config)
                 config.headers.Authorization = `Bearer ${data.accessToken}`;
             }
         }

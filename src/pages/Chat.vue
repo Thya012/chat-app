@@ -14,9 +14,9 @@
                     placeholder="Type a message" required>
                 <button type="submit"
                     class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Send</button>
-                    <button  v-if="isAuthenticated" type="button" @click="handleLogout"
+                <button v-if="user" type="button" @click="handleLogout"
                     class="py-2 px-4 bg-indigo-600 text-white font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Logout</button>
-                </form>
+            </form>
         </div>
     </div>
 </template>
@@ -26,12 +26,14 @@ import { io } from "socket.io-client";
 import axios from 'axios'
 import { mapState, mapActions } from 'pinia';
 import { useAuthStore } from '@/stores/auth.js'
+import { jwtDecode } from "jwt-decode";
 export default {
     data() {
         return {
             messages: [],
             newMessage: '',
             connected: false,
+           user:[],
             socket: null
         };
     },
@@ -50,13 +52,8 @@ export default {
     methods: {
         connectWebSocket() {
             console.log("Trying to connect!")
-            // const token = localStorage.getItem('token');
-            // if (!token) {
-            //   this.$router.push('/');
-            //   return;
-            // }
-            // Get all chat histories from Backend
-
+            //console.log(this.user.username)   
+            //console.log(this.user._id)   
             this.socket = io(`${process.env.VUE_APP_SERVER}`, {
                 // auth: {
                 //   token: `Bearer ${token}`
@@ -82,13 +79,29 @@ export default {
         },
         // Extract user info from Token
         sendMessage() {
-            const message = {
+           const user = JSON.parse(localStorage.getItem('user'))
+           const token = localStorage.getItem('token')
+           const decoded = jwtDecode(token)
+           const currentDate = new Date()
+            const expiry = new Date(decoded.exp * 1000)
+
+           // console.log(user)    
+            if (currentDate > expiry){
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.socket.disconnect()
+                this.$router.push('/')       
+                alert('session expired');  
+            }
+        const message = {
                 text: this.newMessage,
-                username: this.user.username,
-                id: this.user._id
+                username: user.username,
+                id: user._id
             };
             this.socket.emit('send-message', message);
             this.newMessage = '';
+       
+          
         },
         ...mapActions(useAuthStore, ['logout']),
         async handleLogout() {
@@ -99,7 +112,7 @@ export default {
         }
     },
     computed: {
-        ...mapState(useAuthStore, ['user','isAuthenticated'])
+        ...mapState(useAuthStore, ['user', 'isAuthenticated'])
     }
 }
 </script>

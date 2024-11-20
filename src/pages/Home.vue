@@ -28,7 +28,7 @@
     </div>
 </template>
 <script>
-import { mapActions } from 'pinia';
+import { mapActions, mapState } from 'pinia';
 import { useAuthStore } from '@/stores/auth.js'
 export default {
     data() {
@@ -39,7 +39,7 @@ export default {
     },
     methods: {
         // async login() {
-            
+
         // },
         googleLogin() {
             // console.log("ddd")
@@ -50,9 +50,15 @@ export default {
         ...mapActions(useAuthStore, ['login']),
         async passwordLogin() {
             await this.login(this.email, this.password)
-            
-            this.$router.push('/chat')
+            if (this.accessToken) {
+                this.$router.push('/chat')
+            }
+           // this.$router.push('/chat')
         }
+    },
+    computed: {
+        ...mapState(useAuthStore, ["accessToken"])
     }
+
 }
 </script>
